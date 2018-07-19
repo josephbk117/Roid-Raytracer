@@ -51,6 +51,7 @@ int main()
 
 	int const NX = 800;
 	int const NY = 400;
+	int const NS = 10;
 
 	unsigned char *data = new unsigned char [NX * NY * 3];
 
@@ -68,11 +69,21 @@ int main()
 	{
 		for (int x = 0; x < NX; x++)
 		{
+			glm::vec3 col(0.0f, 0.0f, 0.0f);
+			for (int s = 0; s < NS; s++)
+			{
+				float u = (float)(x + (rand() % 9999) / 9999.0f) / float(NX);
+				float v = (float)(y + (rand() % 9999) / 9999.0f) / float(NY);
+				Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
+				col += color(ray, world);
+			}
+			col /= float(NS);
+			
 			int index = ((float)NX * (float)y + (float)x) * 3.0f;
-			float u = (float)x / (float)NX;
+			/*float u = (float)x / (float)NX;
 			float v = (float)y / (float)NY;
 			Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
-			glm::vec3 col = color(ray, world);
+			glm::vec3 col = color(ray, world);*/
 			col *= 255;
 			data[index] = col.r;
 			data[index + 1] = col.g;
