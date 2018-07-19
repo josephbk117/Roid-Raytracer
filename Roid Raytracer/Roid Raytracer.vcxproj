@@ -133,6 +133,9 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\HitableList.h" />
+    <ClInclude Include="src\Sphere.h" />
+    <ClInclude Include="src\Hitable.h" />
     <ClInclude Include="src\ColourData.h" />
     <ClInclude Include="src\DrawingPanel.h" />
     <ClInclude Include="src\Ray.h" />

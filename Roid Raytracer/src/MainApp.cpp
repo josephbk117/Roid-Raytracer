@@ -8,36 +8,26 @@
 #include "DrawingPanel.h"
 #include "ShaderProgram.h"
 #include "TextureLoader.h"
-
-//TODO : Live view
+#include "Hitable.h"
+#include "HitableList.h"
+#include "Sphere.h"
 
 GLFWwindow* window;
-float hitSphere(const glm::vec3& center, float radius, const Ray& r)
-{
-	glm::vec3 oc = r.origin() - center;
-	float a = glm::dot(r.direction(), r.direction());
-	float b = 2.0f * glm::dot(oc, r.direction());
-	float c = glm::dot(oc, oc) - radius * radius;
-	float discriminant = b * b - 4 * a*c;
-	if (discriminant < 0)
-		return -1;
-	else
-		return (-b - glm::sqrt(discriminant)) / (2.0f * a);
-}
 
-glm::vec3 color(Ray ray)
+glm::vec3 color(const Ray& r, Hitable *world)
 {
-	float t = hitSphere(glm::vec3(0, 0, -1), 0.3, ray);
-	if (t > 0.0f)
+	HitRecord rec;
+	if (world->hit(r, 0.0, 99999999.99f, rec))
 	{
-		glm::vec3 N = glm::normalize( ray.pointAtParameter(t) - glm::vec3(0, 0, -1.0f));
-		return 0.5f * glm::vec3(N.x + 1, N.y + 1, N.z + 1);
+		return 0.5f * glm::vec3(rec.normal.x + 1, rec.normal.y + 1, rec.normal.z + 1);
 	}
-	glm::vec3 unit_direction = glm::normalize(ray.direction());
-	t = 0.5f * (unit_direction.y + 1.0f);
-	return ((1.0f - t) * glm::vec3(1.0, 1.0, 1.0)) + (t * glm::vec3(0.5, 0.7, 1.0));
+	else
+	{
+		glm::vec3 unitDirection = glm::normalize(r.direction());
+		float t = 0.5f * (unitDirection.y + 1.0);
+		return (1.0f - t)*glm::vec3(1.0, 1.0, 1.0) + t * glm::vec3(0.5, 0.7, 1.0);
+	}
 }
-
 
 int main()
 {
@@ -59,8 +49,8 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	int const NX = 1200;
-	int const NY = 600;
+	int const NX = 800;
+	int const NY = 400;
 
 	unsigned char *data = new unsigned char [NX * NY * 3];
 
@@ -69,6 +59,10 @@ int main()
 	glm::vec3 vertical = glm::vec3(0, 2.0, 0);
 	glm::vec3 origin = glm::vec3(0.0, 0.0, 0.0);
 	
+	Hitable *list[2];
+	list[0] = new Sphere(glm::vec3(0, 0, -1), 0.5f);
+	list[1] = new Sphere(glm::vec3(0, -100.5, -1), 100);
+	Hitable *world = new HitableList(list, 2);
 
 	for (int y = NY - 1; y >= 0; y--)
 	{
@@ -78,13 +72,14 @@ int main()
 			float u = (float)x / (float)NX;
 			float v = (float)y / (float)NY;
 			Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
-			glm::vec3 col = color(ray);
+			glm::vec3 col = color(ray, world);
 			col *= 255;
 			data[index] = col.r;
 			data[index + 1] = col.g;
 			data[index + 2] = col.b;
 		}
 	}
+
 	//stbi_flip_vertically_on_write(true);
 	//stbi_write_bmp("D:/rayImage.bmp", 200, 100, 3, data);
 
