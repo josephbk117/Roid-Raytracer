@@ -47,7 +47,7 @@ int main()
 {
 	if (!glfwInit())
 		return -1;
-	window = glfwCreateWindow(1200, 600, "Roid Raytracer", NULL, NULL);
+	window = glfwCreateWindow(1400, 700, "Roid Raytracer", NULL, NULL);
 	glfwSetWindowPos(window, 200, 200);
 
 	if (!window)
@@ -63,9 +63,9 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	int const NX = 400;
-	int const NY = 200;
-	int const NS = 100;
+	int const NX = 300;
+	int const NY = 150;
+	int const NS = 400;
 
 	unsigned char *data = new unsigned char[NX * NY * 3];
 
@@ -74,10 +74,13 @@ int main()
 	glm::vec3 vertical = glm::vec3(0, 2.0, 0);
 	glm::vec3 origin = glm::vec3(0.0, 0.0, 0.0);
 
-	Hitable *list[2];
+	Hitable *list[5];
 	list[0] = new Sphere(glm::vec3(0, 0, -1), 0.5f, new Lambertian(glm::vec3(0.8,0.3,0.3)));
 	list[1] = new Sphere(glm::vec3(0, -100.5, -1), 100, new Lambertian(glm::vec3(0.8,0.8,0.0)));
-	Hitable *world = new HitableList(list, 2);
+	list[2] = new Sphere(glm::vec3(1, 0, -1), 0.4f, new Metal(glm::vec3(0.8, 0.5, 0.4),0.05f));
+	list[3] = new Sphere(glm::vec3(-1, 0, -1), 0.5f, new Dielectric(1.5f));
+	list[4] = new Sphere(glm::vec3(-1, 0, -1), -0.495f, new Dielectric(1.5f));
+	Hitable *world = new HitableList(list, 5);
 
 	for (int y = NY - 1; y >= 0; y--)
 	{
@@ -98,7 +101,7 @@ int main()
 			float u = (float)x / (float)NX;
 			float v = (float)y / (float)NY;
 			Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
-			col = color(ray, world);
+			col = color(ray, world,0);
 #endif
 			col = glm::vec3(glm::sqrt(col.r), glm::sqrt(col.g), glm::sqrt(col.b));
 			col *= 255;
