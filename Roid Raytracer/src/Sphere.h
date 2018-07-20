@@ -1,5 +1,6 @@
 #pragma once
 #include "Hitable.h"
+#include "Material.h"
 #include <GLM\glm.hpp>
 class Sphere : public Hitable
 {
@@ -7,7 +8,7 @@ public:
 	glm::vec3 center;
 	float radius;
 	Sphere() {}
-	Sphere(glm::vec3 center, float r) { this->center = center; radius = r; }
+	Sphere(glm::vec3 center, float r, Material* _mat) { this->center = center; radius = r; matPtr = _mat; }
 	virtual bool hit(const Ray& ray, float t_min, float t_max, HitRecord& hitRecord)const;
 };
 bool Sphere::hit(const Ray& ray, float t_min, float t_max, HitRecord& hitRecord)const
@@ -26,6 +27,7 @@ bool Sphere::hit(const Ray& ray, float t_min, float t_max, HitRecord& hitRecord)
 			hitRecord.t = temp;
 			hitRecord.p = ray.pointAtParameter(hitRecord.t);
 			hitRecord.normal = (hitRecord.p - center) / radius;
+			hitRecord.matPtr = matPtr;
 			return true;
 		}
 		temp = (-b + glm::sqrt(b*b - a * c)) / a;
@@ -34,6 +36,7 @@ bool Sphere::hit(const Ray& ray, float t_min, float t_max, HitRecord& hitRecord)
 			hitRecord.t = temp;
 			hitRecord.p = ray.pointAtParameter(hitRecord.t);
 			hitRecord.normal = (hitRecord.p - center) / radius;
+			hitRecord.matPtr = matPtr;
 			return true;
 		}
 	}

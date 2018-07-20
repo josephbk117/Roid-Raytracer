@@ -11,33 +11,29 @@
 #include "Hitable.h"
 #include "HitableList.h"
 #include "Sphere.h"
+#include "MathUtils.h"
+#include "Material.h"
 
 #define ANTI_ALIASING
 
 GLFWwindow* window;
 const float MAX_FLOAT = 9999999999.9999f;
 
-float random01()
-{
-	return (rand() % 9999) / 9999.0f;
-}
-
-glm::vec3 randomInUnitSphere()
-{
-	glm::vec3 p;
-	p = 2.0f * glm::vec3(random01(), random01(), random01());
-	p = glm::normalize(p);
-	return p;
-}
-
-glm::vec3 color(const Ray& r, Hitable *world)
+glm::vec3 color(const Ray& r, Hitable *world, int depth)
 {
 	HitRecord rec;
 	if (world->hit(r, 0.001, MAX_FLOAT, rec))
 	{
-		glm::vec3 target = rec.p + rec.normal + randomInUnitSphere();
-
-		return 0.5f * color(Ray(rec.p, target - rec.p), world);
+		Ray scattered;
+		glm::vec3 attenuation;
+		if (depth < 50 && rec.matPtr->scatter(r, rec, attenuation, scattered))
+		{
+			return attenuation * color(scattered, world, depth + 1);
+		}
+		else
+		{
+			return glm::vec3(0, 0, 0);
+		}
 	}
 	else
 	{
@@ -69,7 +65,7 @@ int main()
 
 	int const NX = 400;
 	int const NY = 200;
-	int const NS = 24;
+	int const NS = 100;
 
 	unsigned char *data = new unsigned char[NX * NY * 3];
 
@@ -79,8 +75,8 @@ int main()
 	glm::vec3 origin = glm::vec3(0.0, 0.0, 0.0);
 
 	Hitable *list[2];
-	list[0] = new Sphere(glm::vec3(0, 0, -1), 0.5f);
-	list[1] = new Sphere(glm::vec3(0, -100.5, -1), 100);
+	list[0] = new Sphere(glm::vec3(0, 0, -1), 0.5f, new Lambertian(glm::vec3(0.8,0.3,0.3)));
+	list[1] = new Sphere(glm::vec3(0, -100.5, -1), 100, new Lambertian(glm::vec3(0.8,0.8,0.0)));
 	Hitable *world = new HitableList(list, 2);
 
 	for (int y = NY - 1; y >= 0; y--)
@@ -95,8 +91,8 @@ int main()
 				float u = (float)((x + random01()) / (float)NX);
 				float v = (float)((y + random01()) / (float)NY);
 				Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
-				col += color(ray, world);
-			}
+				col += color(ray, world, 0);
+		}
 			col /= float(NS);
 #else
 			float u = (float)x / (float)NX;
@@ -109,8 +105,8 @@ int main()
 			data[index] = col.r;
 			data[index + 1] = col.g;
 			data[index + 2] = col.b;
-		}
 	}
+}
 
 	//stbi_flip_vertically_on_write(true);
 	//stbi_write_bmp("D:/rayImage.bmp", 200, 100, 3, data);

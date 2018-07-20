@@ -133,6 +133,8 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\MathUtils.h" />
+    <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\HitableList.h" />
     <ClInclude Include="src\Sphere.h" />
     <ClInclude Include="src\Hitable.h" />
