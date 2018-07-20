@@ -12,14 +12,32 @@
 #include "HitableList.h"
 #include "Sphere.h"
 
+#define ANTI_ALIASING
+
 GLFWwindow* window;
+const float MAX_FLOAT = 9999999999.9999f;
+
+float random01()
+{
+	return (rand() % 9999) / 9999.0f;
+}
+
+glm::vec3 randomInUnitSphere()
+{
+	glm::vec3 p;
+	p = 2.0f * glm::vec3(random01(), random01(), random01());
+	p = glm::normalize(p);
+	return p;
+}
 
 glm::vec3 color(const Ray& r, Hitable *world)
 {
 	HitRecord rec;
-	if (world->hit(r, 0.0, 99999999.99f, rec))
+	if (world->hit(r, 0.001, MAX_FLOAT, rec))
 	{
-		return 0.5f * glm::vec3(rec.normal.x + 1, rec.normal.y + 1, rec.normal.z + 1);
+		glm::vec3 target = rec.p + rec.normal + randomInUnitSphere();
+
+		return 0.5f * color(Ray(rec.p, target - rec.p), world);
 	}
 	else
 	{
@@ -49,17 +67,17 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	int const NX = 800;
-	int const NY = 400;
-	int const NS = 10;
+	int const NX = 400;
+	int const NY = 200;
+	int const NS = 24;
 
-	unsigned char *data = new unsigned char [NX * NY * 3];
+	unsigned char *data = new unsigned char[NX * NY * 3];
 
 	glm::vec3 lowerLeftCorner = glm::vec3(-2.0, -1.0, -1.0);
 	glm::vec3 horizontal = glm::vec3(4.0, 0, 0);
 	glm::vec3 vertical = glm::vec3(0, 2.0, 0);
 	glm::vec3 origin = glm::vec3(0.0, 0.0, 0.0);
-	
+
 	Hitable *list[2];
 	list[0] = new Sphere(glm::vec3(0, 0, -1), 0.5f);
 	list[1] = new Sphere(glm::vec3(0, -100.5, -1), 100);
@@ -70,20 +88,23 @@ int main()
 		for (int x = 0; x < NX; x++)
 		{
 			glm::vec3 col(0.0f, 0.0f, 0.0f);
+			int index = ((float)NX * (float)y + (float)x) * 3.0f;
+#ifdef ANTI_ALIASING
 			for (int s = 0; s < NS; s++)
 			{
-				float u = (float)(x + (rand() % 9999) / 9999.0f) / float(NX);
-				float v = (float)(y + (rand() % 9999) / 9999.0f) / float(NY);
+				float u = (float)((x + random01()) / (float)NX);
+				float v = (float)((y + random01()) / (float)NY);
 				Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
 				col += color(ray, world);
 			}
 			col /= float(NS);
-			
-			int index = ((float)NX * (float)y + (float)x) * 3.0f;
-			/*float u = (float)x / (float)NX;
+#else
+			float u = (float)x / (float)NX;
 			float v = (float)y / (float)NY;
 			Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
-			glm::vec3 col = color(ray, world);*/
+			col = color(ray, world);
+#endif
+			col = glm::vec3(glm::sqrt(col.r), glm::sqrt(col.g), glm::sqrt(col.b));
 			col *= 255;
 			data[index] = col.r;
 			data[index + 1] = col.g;
@@ -111,7 +132,7 @@ int main()
 	shader.use();
 
 	int drawingPanelModelMatrix = shader.getUniformLocation("model");
-	
+
 	while (!glfwWindowShouldClose(window))
 	{
 		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
