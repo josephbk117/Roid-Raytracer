@@ -13,6 +13,7 @@
 #include "Sphere.h"
 #include "MathUtils.h"
 #include "Material.h"
+#include "Camera.h"
 
 #define ANTI_ALIASING
 
@@ -63,16 +64,13 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	int const NX = 300;
-	int const NY = 150;
-	int const NS = 400;
+	int const NX = 500;
+	int const NY = 250;
+	int const NS = 500;
 
 	unsigned char *data = new unsigned char[NX * NY * 3];
 
-	glm::vec3 lowerLeftCorner = glm::vec3(-2.0, -1.0, -1.0);
-	glm::vec3 horizontal = glm::vec3(4.0, 0, 0);
-	glm::vec3 vertical = glm::vec3(0, 2.0, 0);
-	glm::vec3 origin = glm::vec3(0.0, 0.0, 0.0);
+	Camera camera(90, 2.0f);
 
 	Hitable *list[5];
 	list[0] = new Sphere(glm::vec3(0, 0, -1), 0.5f, new Lambertian(glm::vec3(0.8,0.3,0.3)));
@@ -93,7 +91,7 @@ int main()
 			{
 				float u = (float)((x + random01()) / (float)NX);
 				float v = (float)((y + random01()) / (float)NY);
-				Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
+				Ray ray = camera.getRay(u, v); //Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
 				col += color(ray, world, 0);
 		}
 			col /= float(NS);
@@ -131,7 +129,7 @@ int main()
 	shader.use();
 
 	int drawingPanelModelMatrix = shader.getUniformLocation("model");
-
+	float rVal = 0;
 	while (!glfwWindowShouldClose(window))
 	{
 		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
@@ -140,6 +138,38 @@ int main()
 		shader.use();
 		shader.applyShaderUniformMatrix(drawingPanelModelMatrix, drawingPanel.getTransform()->getMatrix());
 		drawingPanel.draw();
+		//camera.origin = glm::vec3(0, glm::sin(rVal) * 10, 0);
+		rVal += 0.1f;
+		for (int y = NY - 1; y >= 0; y--)
+		{
+			for (int x = 0; x < NX; x++)
+			{
+				glm::vec3 col(0.0f, 0.0f, 0.0f);
+				int index = ((float)NX * (float)y + (float)x) * 3.0f;
+#ifdef ANTI_ALIASING
+				for (int s = 0; s < NS; s++)
+				{
+					float u = (float)((x + random01()) / (float)NX);
+					float v = (float)((y + random01()) / (float)NY);
+					Ray ray = camera.getRay(u, v); //Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
+					col += color(ray, world, 0);
+				}
+				col /= float(NS);
+#else
+				float u = (float)x / (float)NX;
+				float v = (float)y / (float)NY;
+				Ray ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
+				col = color(ray, world, 0);
+#endif
+				col = glm::vec3(glm::sqrt(col.r), glm::sqrt(col.g), glm::sqrt(col.b));
+				col *= 255;
+				data[index] = col.r;
+				data[index + 1] = col.g;
+				data[index + 2] = col.b;
+			}
+		}
+		glBindTexture(GL_TEXTURE_2D,textureId);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, NX, NY, TextureManager::getTextureFormatFromData(3), GL_UNSIGNED_BYTE, data);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

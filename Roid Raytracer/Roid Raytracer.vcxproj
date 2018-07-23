@@ -123,6 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\DrawingPanel.cpp" />
     <ClCompile Include="src\Ray.cpp" />
     <ClCompile Include="src\MainApp.cpp" />
@@ -133,6 +134,7 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\MathUtils.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\HitableList.h" />
