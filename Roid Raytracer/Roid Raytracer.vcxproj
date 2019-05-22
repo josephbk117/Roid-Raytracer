@@ -150,6 +150,7 @@
     <ClInclude Include="src\Transform.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DLLs\glew32.dll" />
     <None Include="Resources\frameBuffer.fs" />
     <None Include="Resources\spriteBase.vs" />
   </ItemGroup>

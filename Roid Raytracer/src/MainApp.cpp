@@ -103,9 +103,9 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	const int NX = 320;
-	const int NY = 160;
-	const int NS = 20;
+	const int NX = 380;
+	const int NY = 190;
+	const int NS = 40;
 
 	unsigned char *data = new unsigned char[NX * NY * 3];
 

@@ -94,5 +94,6 @@
     <None Include="Resources\spriteBase.vs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="DLLs\glew32.dll" />
   </ItemGroup>
 </Project>
